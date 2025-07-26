@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { MONGO_ONLINE_URI, MONGO_URI } from "../constants/env.js";
+import { MONGO_URI } from "../constants/env.js";
 
 export async function connectToDatabase() {
   try {
