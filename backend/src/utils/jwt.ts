@@ -1,41 +1,51 @@
 import jwt, { SignOptions } from "jsonwebtoken";
 import { JWT_REFRESH_SECRET, JWT_SECRET } from "../constants/env.js";
-import { UserDocument } from "../models/user.model.js";
-import { SessionDocument } from "../models/session.model.js";
-import { appAssert } from "./appAssert.js";
+import { Types } from "mongoose";
 
 type AccessTokenPayload = {
-  userId: UserDocument["_id"];
-  sessionId: SessionDocument["_id"];
+  userId: Types.ObjectId;
+  sessionId: Types.ObjectId;
 };
 
 type RefreshTokenPayload = {
-  sessionId: SessionDocument["_id"];
+  sessionId: Types.ObjectId;
 };
 
-type SignOptionsAndSecret = SignOptions & {
+type TokenPayloadMap = {
+  access: AccessTokenPayload;
+  refresh: RefreshTokenPayload;
+};
+
+type TokenType = "access" | "refresh";
+
+type TokenConfigEntry = {
+  expiresIn: string;
   secret: string;
+  audience: string[];
 };
 
-const defaults: SignOptions = {
-  audience: ["user"],
+const tokenConfig: Record<TokenType, TokenConfigEntry> = {
+  access: {
+    expiresIn: "30m",
+    secret: JWT_SECRET,
+    audience: ["users"],
+  },
+  refresh: {
+    expiresIn: "30d",
+    secret: JWT_REFRESH_SECRET,
+    audience: ["users"],
+  },
 };
 
-const accessTokenSignOptions: SignOptionsAndSecret = {
-  expiresIn: "30m",
-  secret: JWT_SECRET,
-};
-export const refreshTokenSignOptions: SignOptionsAndSecret = {
-  expiresIn: "30d",
-  secret: JWT_REFRESH_SECRET,
-};
-
-export function signToken(
-  payload: AccessTokenPayload | RefreshTokenPayload,
-  options?: SignOptionsAndSecret
+export function signToken<T extends TokenType>(
+  payload: TokenPayloadMap[T],
+  type: T,
+  options?: SignOptions
 ) {
-  const { secret, ...signOpts } = options || accessTokenSignOptions;
-
-  const token = jwt.sign(payload, secret, { ...defaults, ...signOpts });
-  return token;
+  const { secret, expiresIn, audience } = tokenConfig[type];
+  return jwt.sign(payload, secret, {
+    expiresIn,
+    audience,
+    ...options,
+  } as SignOptions);
 }
