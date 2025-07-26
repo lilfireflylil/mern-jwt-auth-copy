@@ -8,6 +8,8 @@ const defaults: CookieOptions = {
   secure: NODE_ENV !== "development",
 };
 
+const REFRESH_PATH = "/auth/refresh";
+
 function getAccessTokenOptions(): CookieOptions {
   return {
     ...defaults,
@@ -19,7 +21,7 @@ function getRefreshTokenOptions(): CookieOptions {
   return {
     ...defaults,
     expires: thirtyDaysFromNow(),
-    path: "/auth/refresh",
+    path: REFRESH_PATH,
   };
 }
 
@@ -37,4 +39,10 @@ export function setAuthCookies({
   return res
     .cookie("accessToken", accessToken, getAccessTokenOptions())
     .cookie("refreshToken", refreshToken, getRefreshTokenOptions());
+}
+
+export function clearAuthCookies(res: Response) {
+  return res
+    .clearCookie("accessToken")
+    .clearCookie("refreshToken", { path: REFRESH_PATH });
 }

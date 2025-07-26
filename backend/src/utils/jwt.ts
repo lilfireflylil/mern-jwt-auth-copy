@@ -49,3 +49,12 @@ export function signToken<T extends TokenType>(
     ...options,
   } as SignOptions);
 }
+
+export function verifyToken<T extends TokenType>(token: string, type: T) {
+  const { secret, audience } = tokenConfig[type];
+  try {
+    return jwt.verify(token, secret, { audience }) as TokenPayloadMap[T];
+  } catch (error) {
+    return undefined;
+  }
+}

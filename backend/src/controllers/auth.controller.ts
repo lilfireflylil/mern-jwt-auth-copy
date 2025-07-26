@@ -1,8 +1,10 @@
 import { Request, Response } from "express";
-import { setAuthCookies } from "../utils/cookies.js";
+import { clearAuthCookies, setAuthCookies } from "../utils/cookies.js";
 import { CREATED, OK, UNAUTHORIZED } from "../constants/http.js";
 import { createAccount, loginUser } from "../services/auth.service.js";
 import { loginSchema, registerSchema } from "./auth.schema.js";
+import { verifyToken } from "../utils/jwt.js";
+import { SessionModel } from "../models/session.model.js";
 
 // Register Controller
 export async function handleRegister(req: Request, res: Response) {
@@ -33,10 +35,15 @@ export async function handleLogin(req: Request, res: Response) {
 }
 
 // Logout Controller
-export function handleLogout(req: Request, res: Response) {
-  const cookies = req.cookies;
-  console.log(cookies);
+export async function handleLogout(req: Request, res: Response) {
+  const accessToken = req.cookies.accessToken as string | undefined;
+  const payload = verifyToken(accessToken || "", "access");
 
-  res.json({});
+  if (payload) {
+    await SessionModel.findByIdAndDelete(payload.sessionId);
+  }
+
+  clearAuthCookies(res).status(OK).json({ message: "Logout successfully" });
 }
+
 // Refresh Controller
