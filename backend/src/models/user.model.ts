@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import { compareValue, hashValue } from "../utils/bcrypt.js";
 
 export interface UserDocument extends mongoose.Document {
+  _id: mongoose.Types.ObjectId;
   email: string;
   password: string;
   verified: boolean;
@@ -26,6 +27,8 @@ const userSchema = new mongoose.Schema<UserDocument>(
     // we want to remove sensitive fields.
     toJSON: {
       transform(doc, ret) {
+        // Rename _id to id
+        ret.id = ret._id;
         // Remove sensitive fields
         delete ret.password;
         delete ret._id;
@@ -36,6 +39,7 @@ const userSchema = new mongoose.Schema<UserDocument>(
     },
     toObject: {
       transform(doc, ret) {
+        ret.id = ret._id;
         delete ret.password;
         delete ret._id;
         delete ret.__v;
@@ -60,4 +64,4 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
-export const UserModel = mongoose.model("User", userSchema);
+export const UserModel = mongoose.model<UserDocument>("User", userSchema);
