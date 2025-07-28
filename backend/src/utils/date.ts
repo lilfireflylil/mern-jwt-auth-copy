@@ -15,3 +15,5 @@ export function fifteenMinutesFromNow() {
   date.setTime(date.getTime() + 15 * 60 * 1000);
   return date;
 }
+
+export const ONE_DAY_MS = 24 * 60 * 60 * 1000

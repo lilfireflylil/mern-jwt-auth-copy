@@ -8,16 +8,16 @@ const defaults: CookieOptions = {
   secure: NODE_ENV !== "development",
 };
 
-const REFRESH_PATH = "/auth/refresh";
+export const REFRESH_PATH = "/auth/refresh";
 
-function getAccessTokenOptions(): CookieOptions {
+export function getAccessTokenOptions(): CookieOptions {
   return {
     ...defaults,
     expires: fifteenMinutesFromNow(),
   };
 }
 
-function getRefreshTokenOptions(): CookieOptions {
+export function getRefreshTokenOptions(): CookieOptions {
   return {
     ...defaults,
     expires: thirtyDaysFromNow(),

@@ -1,10 +1,20 @@
 import { Request, Response } from "express";
-import { clearAuthCookies, setAuthCookies } from "../utils/cookies.js";
+import {
+  clearAuthCookies,
+  getAccessTokenOptions,
+  getRefreshTokenOptions,
+  setAuthCookies,
+} from "../utils/cookies.js";
 import { CREATED, OK, UNAUTHORIZED } from "../constants/http.js";
-import { createAccount, loginUser } from "../services/auth.service.js";
+import {
+  createAccount,
+  loginUser,
+  refreshUserAccessToken,
+} from "../services/auth.service.js";
 import { loginSchema, registerSchema } from "./auth.schema.js";
 import { verifyToken } from "../utils/jwt.js";
 import { SessionModel } from "../models/session.model.js";
+import { appAssert } from "../utils/appAssert.js";
 
 // Register Controller
 export async function handleRegister(req: Request, res: Response) {
@@ -47,3 +57,22 @@ export async function handleLogout(req: Request, res: Response) {
 }
 
 // Refresh Controller
+export async function handleRefresh(req: Request, res: Response) {
+  const refreshToken = req.cookies.refreshToken as string | undefined;
+  appAssert(refreshToken, UNAUTHORIZED, "Missing refresh token");
+
+  const { accessToken, newRefreshToken } = await refreshUserAccessToken(
+    refreshToken
+  );
+
+  if (newRefreshToken) {
+    res.cookie("refreshToken", newRefreshToken, getRefreshTokenOptions());
+  }
+
+  res
+    .cookie("accessToken", accessToken, getAccessTokenOptions())
+    .status(OK)
+    .json({
+      message: "Access token refreshed",
+    });
+}
