@@ -1,4 +1,10 @@
-import { CONFLICT, UNAUTHORIZED } from "../constants/http.js";
+import { APP_ORIGIN } from "../constants/env.js";
+import {
+  CONFLICT,
+  INTERNAL_SERVER_ERROR,
+  NOT_FOUND,
+  UNAUTHORIZED,
+} from "../constants/http.js";
 import { VerificationCodeType } from "../constants/verificationCodeType.js";
 import { SessionModel } from "../models/session.model.js";
 import { UserModel } from "../models/user.model.js";
@@ -9,7 +15,9 @@ import {
   oneYearFromNow,
   thirtyDaysFromNow,
 } from "../utils/date.js";
+import { getVerifyEmailTemplate } from "../utils/emailTemplate.js";
 import { signToken, verifyToken } from "../utils/jwt.js";
+import sendMail from "../utils/sendMail.js";
 
 type CreateAccountParams = {
   email: string;
@@ -18,6 +26,10 @@ type CreateAccountParams = {
 };
 
 export async function createAccount(data: CreateAccountParams) {
+  await SessionModel.deleteMany();
+  await UserModel.deleteMany();
+  await VerificationCodeModel.deleteMany();
+
   const userExists = await UserModel.exists({ email: data.email });
   appAssert(!userExists, CONFLICT, "Email already in use");
 
@@ -27,11 +39,18 @@ export async function createAccount(data: CreateAccountParams) {
   });
   const userId = user._id;
 
-  const verificationCode = VerificationCodeModel.create({
+  const verificationCode = await VerificationCodeModel.create({
     userId,
     type: VerificationCodeType.EmailVerification,
     expiresAt: oneYearFromNow(),
   });
+
+  const url = `${APP_ORIGIN}/auth/email/verify/${verificationCode._id}`;
+  const { error } = await sendMail({
+    to: user.email,
+    ...getVerifyEmailTemplate(url),
+  });
+  if (error) console.error({ error });
 
   const session = await SessionModel.create({
     userId,
@@ -95,4 +114,27 @@ export async function refreshUserAccessToken(refreshToken: string) {
   );
 
   return { accessToken, newRefreshToken };
+}
+
+export async function verifyEmail(code: string) {
+  const verificationCode = await VerificationCodeModel.findOne({
+    _id: code,
+    type: VerificationCodeType.EmailVerification,
+  });
+  appAssert(
+    verificationCode,
+    NOT_FOUND,
+    "Invalid or expired verification code"
+  );
+
+  const updatedUser = await UserModel.findByIdAndUpdate(
+    verificationCode.userId,
+    { verified: true },
+    { new: true }
+  );
+  appAssert(updatedUser, INTERNAL_SERVER_ERROR, "Failed to verify email");
+
+  await verificationCode.deleteOne();
+
+  return { user: updatedUser };
 }

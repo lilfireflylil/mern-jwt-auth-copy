@@ -10,8 +10,13 @@ import {
   createAccount,
   loginUser,
   refreshUserAccessToken,
+  verifyEmail,
 } from "../services/auth.service.js";
-import { loginSchema, registerSchema } from "./auth.schema.js";
+import {
+  loginSchema,
+  registerSchema,
+  verificationCodeSchema,
+} from "./auth.schema.js";
 import { verifyToken } from "../utils/jwt.js";
 import { SessionModel } from "../models/session.model.js";
 import { appAssert } from "../utils/appAssert.js";
@@ -75,4 +80,11 @@ export async function refreshHandler(req: Request, res: Response) {
     .json({
       message: "Access token refreshed",
     });
+}
+
+export async function verifyEmailHandler(req: Request, res: Response) {
+  const verificationCode = verificationCodeSchema.parse(req.params.code);
+  await verifyEmail(verificationCode);
+
+  res.status(OK).json({ message: "Email was successfully verified" });
 }
