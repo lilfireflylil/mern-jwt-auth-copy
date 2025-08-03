@@ -1,13 +1,13 @@
 import { Router } from "express";
 import {
-  handleRegister,
-  handleLogin,
-  handleLogout,
-  handleRefresh,
+  loginHandler,
+  logoutHandler,
+  refreshHandler,
+  registerHandler,
 } from "../controllers/auth.controller.js";
 
 export const authRoutes = Router();
-authRoutes.post("/register", handleRegister);
-authRoutes.post("/login", handleLogin);
-authRoutes.get("/refresh", handleRefresh);
-authRoutes.get("/logout", handleLogout);
+authRoutes.post("/register", registerHandler);
+authRoutes.post("/login", loginHandler);
+authRoutes.get("/refresh", refreshHandler);
+authRoutes.get("/logout", logoutHandler);

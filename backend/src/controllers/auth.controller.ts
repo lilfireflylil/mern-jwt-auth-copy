@@ -17,7 +17,7 @@ import { SessionModel } from "../models/session.model.js";
 import { appAssert } from "../utils/appAssert.js";
 
 // Register Controller
-export async function handleRegister(req: Request, res: Response) {
+export async function registerHandler(req: Request, res: Response) {
   const request = registerSchema.parse({
     ...req.body,
     userAgent: req.headers["user-agent"],
@@ -31,7 +31,7 @@ export async function handleRegister(req: Request, res: Response) {
 }
 
 // Login Controller
-export async function handleLogin(req: Request, res: Response) {
+export async function loginHandler(req: Request, res: Response) {
   const request = loginSchema.parse({
     ...req.body,
     userAgent: req.headers["user-agent"],
@@ -45,7 +45,7 @@ export async function handleLogin(req: Request, res: Response) {
 }
 
 // Logout Controller
-export async function handleLogout(req: Request, res: Response) {
+export async function logoutHandler(req: Request, res: Response) {
   const accessToken = req.cookies.accessToken as string | undefined;
   const payload = verifyToken(accessToken || "", "access");
 
@@ -57,7 +57,7 @@ export async function handleLogout(req: Request, res: Response) {
 }
 
 // Refresh Controller
-export async function handleRefresh(req: Request, res: Response) {
+export async function refreshHandler(req: Request, res: Response) {
   const refreshToken = req.cookies.refreshToken as string | undefined;
   appAssert(refreshToken, UNAUTHORIZED, "Missing refresh token");
 
