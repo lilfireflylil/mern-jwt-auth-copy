@@ -10,11 +10,15 @@ import {
   createAccount,
   loginUser,
   refreshUserAccessToken,
+  resetPassword,
+  sendPasswordResetEmail,
   verifyEmail,
 } from "../services/auth.service.js";
 import {
+  emailSchema,
   loginSchema,
   registerSchema,
+  resetPasswordSchema,
   verificationCodeSchema,
 } from "./auth.schema.js";
 import { verifyToken } from "../utils/jwt.js";
@@ -66,9 +70,8 @@ export async function refreshHandler(req: Request, res: Response) {
   const refreshToken = req.cookies.refreshToken as string | undefined;
   appAssert(refreshToken, UNAUTHORIZED, "Missing refresh token");
 
-  const { accessToken, newRefreshToken } = await refreshUserAccessToken(
-    refreshToken
-  );
+  const { accessToken, newRefreshToken } =
+    await refreshUserAccessToken(refreshToken);
 
   if (newRefreshToken) {
     res.cookie("refreshToken", newRefreshToken, getRefreshTokenOptions());
@@ -87,4 +90,22 @@ export async function verifyEmailHandler(req: Request, res: Response) {
   await verifyEmail(verificationCode);
 
   res.status(OK).json({ message: "Email was successfully verified" });
+}
+
+export async function sendPasswordResetHandler(req: Request, res: Response) {
+  const email = emailSchema.parse(req.body.email);
+
+  await sendPasswordResetEmail(email);
+
+  res.status(OK).json({ message: "Password reset email sent" });
+}
+
+export async function resetPasswordHandler(req: Request, res: Response) {
+  const request = resetPasswordSchema.parse(req.body);
+
+  await resetPassword(request);
+
+  clearAuthCookies(res)
+    .status(OK)
+    .json({ message: "Password was reset successfully" });
 }
