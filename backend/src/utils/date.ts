@@ -10,9 +10,9 @@ export function thirtyDaysFromNow() {
   return date;
 }
 
-export function fifteenMinutesFromNow() {
+export function thirtyMinutesFromNow() {
   const date = new Date();
-  date.setTime(date.getTime() + 15 * 60 * 1000);
+  date.setTime(date.getTime() + 30 * 60 * 1000);
   return date;
 }
 

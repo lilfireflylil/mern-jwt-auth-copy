@@ -1,59 +1,57 @@
-import jwt, { SignOptions } from "jsonwebtoken";
+import jwt, { SignOptions, VerifyOptions } from "jsonwebtoken";
 import { JWT_REFRESH_SECRET, JWT_SECRET } from "../constants/env.js";
-import { Types } from "mongoose";
+import mongoose from "mongoose";
 
-type AccessTokenPayload = {
-  userId: Types.ObjectId;
-  sessionId: Types.ObjectId;
+export type AccessTokenPayload = {
+  userId: mongoose.Types.ObjectId;
+  sessionId: mongoose.Types.ObjectId;
 };
 
 type RefreshTokenPayload = {
-  sessionId: Types.ObjectId;
+  sessionId: mongoose.Types.ObjectId;
+};
+
+const signDefaults: SignOptions = {
+  audience: ["user"],
+};
+
+const verifyDefaults: VerifyOptions = {
+  audience: ["user"],
 };
 
 type TokenPayloadMap = {
-  access: AccessTokenPayload;
-  refresh: RefreshTokenPayload;
+  accessToken: AccessTokenPayload;
+  refreshToken: RefreshTokenPayload;
 };
 
-type TokenType = "access" | "refresh";
-
-type TokenConfigEntry = {
-  expiresIn: string;
-  secret: string;
-  audience: string[];
-};
-
-const tokenConfig: Record<TokenType, TokenConfigEntry> = {
-  access: {
-    expiresIn: "30m",
-    secret: JWT_SECRET,
-    audience: ["users"],
-  },
-  refresh: {
-    expiresIn: "30d",
-    secret: JWT_REFRESH_SECRET,
-    audience: ["users"],
-  },
-};
-
-export function signToken<T extends TokenType>(
+export function signToken<T extends keyof TokenPayloadMap>(
   payload: TokenPayloadMap[T],
   type: T,
   options?: SignOptions
 ) {
-  const { secret, expiresIn, audience } = tokenConfig[type];
-  return jwt.sign(payload, secret, {
-    expiresIn,
-    audience,
+  const secret = type === "accessToken" ? JWT_SECRET : JWT_REFRESH_SECRET;
+  const token = jwt.sign(payload, secret, {
+    expiresIn: type === "accessToken" ? "30m" : "30d",
+    ...signDefaults,
     ...options,
-  } as SignOptions);
+  });
+
+  return token;
 }
 
-export function verifyToken<T extends TokenType>(token: string, type: T) {
-  const { secret, audience } = tokenConfig[type];
+export function verifyToken<T extends keyof TokenPayloadMap>(
+  token: string,
+  type: T,
+  options?: VerifyOptions
+) {
+  const secret = type === "accessToken" ? JWT_SECRET : JWT_REFRESH_SECRET;
   try {
-    return jwt.verify(token, secret, { audience }) as TokenPayloadMap[T];
+    const decoded = jwt.verify(token, secret, {
+      ...verifyDefaults,
+      ...options,
+    }) as TokenPayloadMap[T];
+
+    return decoded;
   } catch (error) {
     return undefined;
   }

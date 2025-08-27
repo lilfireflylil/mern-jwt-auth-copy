@@ -1,6 +1,6 @@
 import { Response, CookieOptions } from "express";
 import { NODE_ENV } from "../constants/env.js";
-import { fifteenMinutesFromNow, thirtyDaysFromNow } from "./date.js";
+import { thirtyDaysFromNow, thirtyMinutesFromNow } from "./date.js";
 
 const defaults: CookieOptions = {
   sameSite: "strict",
@@ -13,7 +13,7 @@ export const REFRESH_PATH = "/auth/refresh";
 export function getAccessTokenOptions(): CookieOptions {
   return {
     ...defaults,
-    expires: fifteenMinutesFromNow(),
+    expires: thirtyMinutesFromNow(),
   };
 }
 
