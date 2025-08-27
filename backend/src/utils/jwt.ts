@@ -53,6 +53,8 @@ export function verifyToken<T extends keyof TokenPayloadMap>(
 
     return decoded;
   } catch (error) {
+    console.log(error);
+
     return undefined;
   }
 }

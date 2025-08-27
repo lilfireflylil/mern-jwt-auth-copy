@@ -56,7 +56,7 @@ export async function loginHandler(req: Request, res: Response) {
 // Logout Controller
 export async function logoutHandler(req: Request, res: Response) {
   const accessToken = req.cookies.accessToken as string | undefined;
-  const payload = verifyToken(accessToken || "", "access");
+  const payload = verifyToken(accessToken || "", "accessToken");
 
   if (payload) {
     await SessionModel.findByIdAndDelete(payload.sessionId);

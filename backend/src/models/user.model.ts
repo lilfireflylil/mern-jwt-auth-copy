@@ -8,7 +8,7 @@ export interface UserDocument extends mongoose.Document {
   verified: boolean;
   createdAt: Date;
   updatedAt: Date;
-  comparePassword: (password: string) => Promise<Boolean>;
+  comparePassword: (password: string) => Promise<boolean>;
 }
 
 const userSchema = new mongoose.Schema<UserDocument>(

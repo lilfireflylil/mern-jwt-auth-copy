@@ -65,8 +65,8 @@ export async function createAccount(data: CreateAccountParams) {
   });
   const sessionId = session._id;
 
-  const accessToken = signToken({ userId, sessionId }, "access");
-  const refreshToken = signToken({ sessionId }, "refresh");
+  const accessToken = signToken({ userId, sessionId }, "accessToken");
+  const refreshToken = signToken({ sessionId }, "refreshToken");
 
   return { user, accessToken, refreshToken };
 }
@@ -91,14 +91,14 @@ export async function loginUser(request: LoginParams) {
   const session = await SessionModel.create({ userId, userAgent });
   const sessionId = session._id;
 
-  const accessToken = signToken({ userId, sessionId }, "access");
-  const refreshToken = signToken({ sessionId }, "refresh");
+  const accessToken = signToken({ userId, sessionId }, "accessToken");
+  const refreshToken = signToken({ sessionId }, "refreshToken");
 
   return { user, accessToken, refreshToken };
 }
 
 export async function refreshUserAccessToken(refreshToken: string) {
-  const payload = verifyToken(refreshToken, "refresh");
+  const payload = verifyToken(refreshToken, "refreshToken");
   appAssert(payload, UNAUTHORIZED, "Invalid refresh token");
 
   const session = await SessionModel.findById(payload.sessionId);
@@ -113,11 +113,11 @@ export async function refreshUserAccessToken(refreshToken: string) {
   }
 
   const newRefreshToken = sessionNeedsRefresh
-    ? signToken({ sessionId: session._id }, "refresh")
+    ? signToken({ sessionId: session._id }, "refreshToken")
     : undefined;
   const accessToken = signToken(
     { sessionId: session._id, userId: session.userId },
-    "access"
+    "accessToken"
   );
 
   return { accessToken, newRefreshToken };

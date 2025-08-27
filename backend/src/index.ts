@@ -5,6 +5,9 @@ import { errorHandler } from "./middlewares/errorHandler.js";
 import { NODE_ENV, PORT } from "./constants/env.js";
 import { connectToDatabase } from "./config/db.js";
 import cookieParser from "cookie-parser";
+import authenticate from "./middlewares/authenticate.js";
+import userRoutes from "./routes/user.route.js";
+import sessionRoutes from "./routes/session.route.js";
 
 const app = express();
 
@@ -12,12 +15,17 @@ const app = express();
 app.use(cookieParser());
 app.use(express.json());
 
-// routes
+// health check
 app.get("/", (req, res) => {
   res.json({ status: "healthy" });
 });
 
+// auth routes
 app.use("/auth", authRoutes);
+
+// protected routers
+app.use("/user", authenticate, userRoutes);
+app.use("/sessions", authenticate, sessionRoutes);
 
 // error handling
 app.use(errorHandler);
